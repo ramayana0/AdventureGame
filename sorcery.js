@@ -2,7 +2,7 @@ $( function() {
 	var buttons = $(".section button");
 	var status = $("#status");
 	var sections = $(".section");
-	var hits = $("action").attr("name");
+	var etatZombie = $("<span class='zombieState'>Zombie</span>");
 
 	var life = 0;
 	var lifeFull = 5;
@@ -11,22 +11,30 @@ $( function() {
 
 	startGame();
 	$(".noObject").hide();
+	$(".excededLifeFull").hide();
 	$(".life span").html(getLife());
 	$(".zombie span").html(getPotion());
 
-
 	buttons.click( function() {
-		gotoSection("#"+$(this).attr("go"));
+		if($(this).attr("go")!="usePotion"){
+			gotoSection("#"+$(this).attr("go"));
+		}
 		if($(this).attr("go")=="hitDoor" || $(this).attr("go")=="hitWall"){
-			loseOneLife();
-		}	
+			loseOneLife();	
+		}
+		if($(this).attr("go")=="usePotion"){
+			usePotion();
+		}
 	});
-	
+
+
+
 	$("#exit button, #death button").click(function(){
 		startGame();
 	});
 	
 	function gotoSection(key) {
+		
 		$(sections).hide();
 		$(key).show();
 	}
@@ -75,7 +83,7 @@ $( function() {
 		gotoSection("#death");
 	}
 
-	function useItem(){
+	function usePotion(){
 		if(potion<1){
 			potion=0;
 			empty();
@@ -83,16 +91,31 @@ $( function() {
 		if(potion>0){
 			potion --;
 			life ++;
-			zombieState.remove();
-			return potion;
+			setPotion(potion);
+			if(life>lifeFull){
+				excededLifeFull();
+			}
+			setLife(life);
+			$(".life span").html(getLife());
+			$(".zombie span").html(getPotion());
+			$(etatZombie).remove();
+			return getPotion();
 		}
 
 	}
 
+	function excededLifeFull(){
+		$(".excededLifeFull").show().delay(500).fadeOut();
+	}
+
 	function empty(){
-		$("noObject").show().delay(5000).fadeOut();
+		$(".noObject").show().delay(500).fadeOut();
 	}
 	
+	function zombieState(){
+		
+		$(etatZombie).insertAfter(".zombie");
+	}
 	function startGame(){
 		setLife(lifeFull);
 		setPotion(maxPotion);
