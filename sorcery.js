@@ -2,34 +2,56 @@ $( function() {
 	var buttons = $(".section button");
 	var status = $("#status");
 	var sections = $(".section");
-	var etatZombie = $("<span class='zombieState'>Zombie</span>");
+	var etatBleeding=$("<span class='bleedingState'>Saignement : -1 vie par action</span>");
 
 	var life = 0;
-	var lifeFull = 5;
-	var potion = 0;
-	var maxPotion = 3;
-
+	var lifeFull = 3;
+	var bandage = 0;
+	var maxBandage = 2;
+	var bleedingIsActive =false;
+	
 	startGame();
 	$(".noObject").hide();
-	$(".excededLifeFull").hide();
+	$(".exceededLifeFull").hide();
 	$(".life span").html(getLife());
-	$(".zombie span").html(getPotion());
+	$(".zombie span").html(getBandage());
 
+/* Il y a un travail de refactoring que je n'ai pas fait complètement
+	surtout au niveau des appels des getters et des setters*/
 	buttons.click( function() {
-		if($(this).attr("go")!="usePotion"){
+		if(bleedingIsActive && $(this).attr("go")!="useBandage"){
+		 	bleedingLife();
+			setLife(life);
+		}
+		if($(this).attr("go")!="useBandage"){
 			gotoSection("#"+$(this).attr("go"));
+			setLife(life);
 		}
-		if($(this).attr("go")=="hitDoor" || $(this).attr("go")=="hitWall"){
-			loseOneLife();	
+		if($(this).attr("go")=="hitWire" || $(this).attr("go")=="minotaurRoom" 
+		|| $(this).attr("go")=="itsATrap" || $(this).attr("go")=="slideOnFloor"
+		|| $(this).attr("go")=="hitBucket"){
+			loseOneLife();
+			var random=Math.floor((Math.random() * 10) + 1);
+			if(random<=5 && getLife()>0){
+				bleedingState();
+				bleedingIsActive=true;
+			}
 		}
-		if($(this).attr("go")=="usePotion"){
-			usePotion();
+		if($(this).attr("go")=="bathroom"){
+			bandage++;
+			$(".bleeding span").html(getBandage());
+		}
+		if($(this).attr("go")=="useBandage"){
+			useBandage();
+		}
+		if($(this).attr("go")=="death" || $(this).attr("go")=="suicide"){
+			setLife(0);
+			$(".life span").html(getLife());
 		}
 	});
 
 
-
-	$("#exit button, #death button").click(function(){
+	$("#exit button, #death button, #suicide button").click(function(){
 		startGame();
 	});
 	
@@ -56,18 +78,18 @@ $( function() {
 		}
 	}
 
-	function getPotion(){
-		return potion;
+	function getBandage(){
+		return bandage;
 	}
 
-	function setPotion(v){
-		potion = v;
+	function setBandage(v){
+		bandage = v;
 
-		if(potion>maxPotion){
-			potion = maxPotion;
+		if(bandage > maxBandage){
+			bandage = maxBandage;
 		}
-		if(potion<1){
-			potion=0;
+		if(bandage<0){
+			bandage=0;
 			empty();
 		}
 	}
@@ -81,46 +103,57 @@ $( function() {
 
 	function gameOver(){
 		gotoSection("#death");
+		bleedingIsActive=false;
+		$(etatBleeding).remove();
 	}
 
-	function usePotion(){
-		if(potion<1){
-			potion=0;
+	function useBandage(){
+		if(bandage<1){
+			bandage=0;
 			empty();
 		}
-		if(potion>0){
-			potion --;
+		if(bandage>0){
+			bandage --;
 			life ++;
-			setPotion(potion);
+			setBandage(bandage);
 			if(life>lifeFull){
-				excededLifeFull();
+				exceededLifeFull();
 			}
 			setLife(life);
 			$(".life span").html(getLife());
-			$(".zombie span").html(getPotion());
-			$(etatZombie).remove();
-			return getPotion();
+			$(".bleeding span").html(getBandage());
+			bleedingIsActive =false;
+			$(etatBleeding).remove();
+			return getBandage();
 		}
 
 	}
 
-	function excededLifeFull(){
-		$(".excededLifeFull").show().delay(500).fadeOut();
+	function bleedingLife(){
+		life --;
+		setLife(life);
+		$(".life span").html(getLife());
+	}
+
+	function exceededLifeFull(){
+		$(".exceededLifeFull").show().delay(500).fadeOut();
 	}
 
 	function empty(){
 		$(".noObject").show().delay(500).fadeOut();
 	}
 	
-	function zombieState(){
-		
-		$(etatZombie).insertAfter(".zombie");
+	function bleedingState(){
+		$(etatBleeding).insertAfter(".bleeding");
 	}
+
 	function startGame(){
 		setLife(lifeFull);
-		setPotion(maxPotion);
-		$(".life span").html(life);
-		$(".zombie span").html(potion);
+		setBandage(0);
+		$(etatBleeding).remove();
+		bleedingIsActive =false;
+		$(".life span").html(getLife());
+		$(".bleeding span").html(getBandage());
 		$(sections).hide();
 		$("#intro").show();
 	}
